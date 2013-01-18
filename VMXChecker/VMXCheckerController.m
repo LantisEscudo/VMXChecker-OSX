@@ -25,6 +25,22 @@ int passes_done;
     
 }
 
+- (IBAction)fileBrowse:(id)sender {
+    
+}
+
+- (IBAction)fixClick:(id)sender {
+    
+}
+
+- (void)media_info {
+    
+}
+
+- (void)check_file {
+    
+}
+
 - (void)parseOutput:(NSString *)output {
     if ([output rangeOfString:@"indexing"].location != NSNotFound) {
         //do nothing, toss the line
