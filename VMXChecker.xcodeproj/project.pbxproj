@@ -13,6 +13,8 @@
 		CE56E4E616A8F9D600107D99 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = CE56E4E416A8F9D600107D99 /* Credits.rtf */; };
 		CE56E4E916A8F9D600107D99 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4E816A8F9D600107D99 /* AppDelegate.m */; };
 		CE56E4EC16A8F9D600107D99 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = CE56E4EA16A8F9D600107D99 /* MainMenu.xib */; };
+		CE56E4F616A8FED800107D99 /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4F316A8FED800107D99 /* RegexKitLite.m */; };
+		CE56E4F716A8FED800107D99 /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4F516A8FED800107D99 /* TaskWrapper.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +31,10 @@
 		CE56E4E716A8F9D600107D99 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		CE56E4E816A8F9D600107D99 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		CE56E4EB16A8F9D600107D99 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		CE56E4F216A8FED800107D99 /* RegexKitLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
+		CE56E4F316A8FED800107D99 /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
+		CE56E4F416A8FED800107D99 /* TaskWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TaskWrapper.h; sourceTree = "<group>"; };
+		CE56E4F516A8FED800107D99 /* TaskWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TaskWrapper.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +88,10 @@
 		CE56E4DB16A8F9D600107D99 /* VMXChecker */ = {
 			isa = PBXGroup;
 			children = (
+				CE56E4F216A8FED800107D99 /* RegexKitLite.h */,
+				CE56E4F316A8FED800107D99 /* RegexKitLite.m */,
+				CE56E4F416A8FED800107D99 /* TaskWrapper.h */,
+				CE56E4F516A8FED800107D99 /* TaskWrapper.m */,
 				CE56E4E716A8F9D600107D99 /* AppDelegate.h */,
 				CE56E4E816A8F9D600107D99 /* AppDelegate.m */,
 				CE56E4EA16A8F9D600107D99 /* MainMenu.xib */,
@@ -167,6 +177,8 @@
 			files = (
 				CE56E4E216A8F9D600107D99 /* main.m in Sources */,
 				CE56E4E916A8F9D600107D99 /* AppDelegate.m in Sources */,
+				CE56E4F616A8FED800107D99 /* RegexKitLite.m in Sources */,
+				CE56E4F716A8FED800107D99 /* TaskWrapper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
