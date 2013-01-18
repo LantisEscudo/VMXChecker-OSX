@@ -23,7 +23,7 @@ NSString *videoFormatProfile;
 NSString *audioFormat;
 NSString *audioFormatVersion;
 NSString *audioFormatProfile;
-NSString *audioSamplingRate;
+int audioSamplingRate;
 BOOL correctVideoFormat;
 bool correctAudioFormat;
 
@@ -89,7 +89,7 @@ NSFont *grayFont;
     NSFileHandle *MIReadHandle = [MIPipe fileHandleForReading];
     
     [MITask setLaunchPath:[[NSBundle bundleForClass:[self class]] pathForResource:@"mediainfo" ofType:nil]];
-    [MITask setArguments:[NSArray arrayWithObjects:@"--Output=XML", inputfilename, nil]];
+    [MITask setArguments:[NSArray arrayWithObjects:@"--Output=XML", @"--Full", inputfilename, nil]];
     [MITask setStandardError:MIPipe];
     [MITask setStandardOutput:MIPipe];
     
@@ -151,7 +151,9 @@ NSFont *grayFont;
     audioFormatVersion = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
     
     tempnodes = [at nodesForXPath:@"./Sampling_rate" error:nil];
-    audioSamplingRate = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    NSLog([[tempnodes objectAtIndex:0] stringValue]);
+    audioSamplingRate = ([tempnodes count] > 0) ? [[[tempnodes objectAtIndex:0] stringValue] intValue] : 0;
+
 /*    NSLog([NSString stringWithFormat:@"Video Format: %@", videoFormat]);
     NSLog([NSString stringWithFormat:@"Video Format Profile: %@", videoFormatProfile]);
     NSLog([NSString stringWithFormat:@"Video Format Version: %@", videoFormatVersion]);
@@ -175,9 +177,9 @@ NSFont *grayFont;
 
     }
     
-    [audioPropertiesLabel setStringValue:[NSString stringWithFormat:@"%@\n%@\n%@\n%@", audioFormat, audioFormatVersion, audioFormatProfile, audioSamplingRate]];
+    [audioPropertiesLabel setStringValue:[NSString stringWithFormat:@"%@\n%@\n%@\n%d", audioFormat, audioFormatVersion, audioFormatProfile, audioSamplingRate]];
 
-    if ([audioFormat isEqualToString:@"MPEG Audio"] && [audioFormatVersion isEqualToString:@"Version 1"] && [audioFormatProfile isEqualToString:@"Layer 2"] && [audioSamplingRate isEqualToString:@"48.0 KHz"]) {
+    if ([audioFormat isEqualToString:@"MPEG Audio"] && [audioFormatVersion isEqualToString:@"Version 1"] && [audioFormatProfile isEqualToString:@"Layer 2"] && audioSamplingRate == 48000) {
         
         [audioPropertiesLabel setTextColor:[NSColor greenColor]];
     } else {
