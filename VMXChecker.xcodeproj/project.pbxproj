@@ -15,6 +15,7 @@
 		CE56E4F616A8FED800107D99 /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4F316A8FED800107D99 /* RegexKitLite.m */; };
 		CE56E4F716A8FED800107D99 /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4F516A8FED800107D99 /* TaskWrapper.m */; };
 		CE56E4FA16A9001700107D99 /* VMXCheckerController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4F916A9001700107D99 /* VMXCheckerController.m */; };
+		CE6B30B816A9D765005C7346 /* mediainfo in Resources */ = {isa = PBXBuildFile; fileRef = CE6B30B716A9D765005C7346 /* mediainfo */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 		CE56E4F516A8FED800107D99 /* TaskWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TaskWrapper.m; sourceTree = "<group>"; };
 		CE56E4F816A9001700107D99 /* VMXCheckerController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VMXCheckerController.h; sourceTree = "<group>"; };
 		CE56E4F916A9001700107D99 /* VMXCheckerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VMXCheckerController.m; sourceTree = "<group>"; };
+		CE6B30B716A9D765005C7346 /* mediainfo */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = mediainfo; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 				CE56E4DB16A8F9D600107D99 /* VMXChecker */,
 				CE56E4D416A8F9D600107D99 /* Frameworks */,
 				CE56E4D216A8F9D600107D99 /* Products */,
+				CE6B30B716A9D765005C7346 /* mediainfo */,
 			);
 			sourceTree = "<group>";
 		};
@@ -165,6 +168,7 @@
 				CE56E4E016A8F9D600107D99 /* InfoPlist.strings in Resources */,
 				CE56E4E616A8F9D600107D99 /* Credits.rtf in Resources */,
 				CE56E4EC16A8F9D600107D99 /* MainMenu.xib in Resources */,
+				CE6B30B816A9D765005C7346 /* mediainfo in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,9 +264,11 @@
 		CE56E4F016A8F9D600107D99 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VMXChecker/VMXChecker-Prefix.pch";
 				INFOPLIST_FILE = "VMXChecker/VMXChecker-Info.plist";
+				OTHER_LDFLAGS = "-licucore";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -271,9 +277,11 @@
 		CE56E4F116A8F9D600107D99 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VMXChecker/VMXChecker-Prefix.pch";
 				INFOPLIST_FILE = "VMXChecker/VMXChecker-Info.plist";
+				OTHER_LDFLAGS = "-licucore";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -298,6 +306,7 @@
 				CE56E4F116A8F9D600107D99 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

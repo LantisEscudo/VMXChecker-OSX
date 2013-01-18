@@ -13,6 +13,21 @@
 TaskWrapper* encodeTask;
 int passes;
 int passes_done;
+NSString *inputfilename;
+int frames;
+int inputWidth;
+int inputHeight;
+NSString *videoFormat;
+NSString *videoFormatVersion;
+NSString *videoFormatProfile;
+NSString *audioFormat;
+NSString *audioFormatVersion;
+NSString *audioFormatProfile;
+NSString *audioSamplingRate;
+BOOL correctVideoFormat;
+bool correctAudioFormat;
+
+NSFont *grayFont;
 
 
 @synthesize window;
@@ -22,11 +37,43 @@ int passes_done;
     //Code for startup
     findRunning=NO;
     ffmpegpath = [[[NSBundle bundleForClass:[self class]] pathForResource:@"ffmpeg" ofType:nil] retain];
+    inputfilename = @"";
+    frames = 0;
+    inputWidth = 0;
+    inputHeight = 0;
+    videoFormat = @"";
+    videoFormatVersion = @"";
+    videoFormatProfile = @"";
+    audioFormat = @"";
+    audioFormatVersion = @"";
+    audioFormatProfile = @"";
+    audioSamplingRate = 0;
+    correctVideoFormat = true;
+    correctAudioFormat = true;
+    
+    
     
 }
 
 - (IBAction)fileBrowse:(id)sender {
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
     
+    [openDlg setCanChooseFiles:YES];
+    [openDlg setCanChooseDirectories:NO];
+    [openDlg setAllowsMultipleSelection:NO];
+    
+    if ( [openDlg runModal] == NSOKButton )
+    {
+        NSURL* fileName = [openDlg URL];
+        
+        // Do something with the filename.
+        inputfilename = [fileName path];
+        [inputFileBox setStringValue:inputfilename];
+        [self media_info];
+        if ([inputfilename isNotEqualTo:@""]) {
+            [self check_file];            
+        }
+    }
 }
 
 - (IBAction)fixClick:(id)sender {
@@ -34,11 +81,141 @@ int passes_done;
 }
 
 - (void)media_info {
+    NSTask *MITask = [[NSTask alloc] init];
+    NSPipe *MIPipe = [[NSPipe alloc] init];
+    NSFileHandle *MIReadHandle = [MIPipe fileHandleForReading];
     
+    [MITask setLaunchPath:[[NSBundle bundleForClass:[self class]] pathForResource:@"mediainfo" ofType:nil]];
+    [MITask setArguments:[NSArray arrayWithObjects:@"--Output=XML", inputfilename, nil]];
+    [MITask setStandardError:MIPipe];
+    [MITask setStandardOutput:MIPipe];
+    
+    [MITask launch];
+    
+    NSData *MIOutput = [MIReadHandle readDataToEndOfFile];
+    [MITask waitUntilExit];
+    
+    NSError *MIErr;
+    
+    NSXMLDocument *MIParsedOutput = [[NSXMLDocument alloc] initWithData:MIOutput options:NSXMLDocumentTidyXML error:&MIErr];
+    NSArray *vtracks = [MIParsedOutput nodesForXPath:@"./Mediainfo/File/track[@type='Video']" error:nil];
+    NSArray *atracks = [MIParsedOutput nodesForXPath:@"./Mediainfo/File/track[@type='Audio']" error:nil];
+    
+    if ([vtracks count] < 1) {
+        //Not video file, alert and bail
+        NSAlert *noVidAlert = [NSAlert alertWithMessageText:@"No video stream found" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"No video stream was found in the file."];
+        [self reset_fields];
+        [noVidAlert runModal];
+        return;
+    }
+        
+    if ([atracks count] < 1) {
+        //No audio tracks, alert and bail
+        NSAlert *noAudAlert = [NSAlert alertWithMessageText:@"No audio stream found" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"No audio stream was found in the file."];
+        [self reset_fields];
+        [noAudAlert runModal];
+        return;
+    }
+    
+    NSXMLElement *vt = [vtracks objectAtIndex:0];
+    NSString *heightString = [[[vt nodesForXPath:@"./Height" error:nil] objectAtIndex:0] stringValue];
+    heightString = [heightString stringByReplacingOccurrencesOfString:@" pixels" 
+                                                           withString:@""];
+    inputHeight = [heightString intValue];
+    NSString *widthString = [[[vt nodesForXPath:@"./Width" error:nil] objectAtIndex:0] stringValue];
+    widthString = [widthString stringByReplacingOccurrencesOfString:@" pixels" 
+                                                         withString:@""];
+    inputWidth = [widthString intValue];
+    
+    NSArray *tempnodes = [vt nodesForXPath:@"./Format" error:nil];
+
+    videoFormat = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
+    tempnodes = [vt nodesForXPath:@"./Format_profile" error:nil];
+    videoFormatProfile = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
+    tempnodes = [vt nodesForXPath:@"./Format_version" error:nil];
+    videoFormatVersion = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
+    NSXMLElement *at = [atracks objectAtIndex:0];
+    tempnodes = [at nodesForXPath:@"./Format" error:nil];
+    audioFormat = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
+    tempnodes = [at nodesForXPath:@"./Format_profile" error:nil];
+    audioFormatProfile = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
+    tempnodes = [at nodesForXPath:@"./Format_version" error:nil];
+    audioFormatVersion = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
+    tempnodes = [at nodesForXPath:@"./Sampling_rate" error:nil];
+    audioSamplingRate = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+/*    NSLog([NSString stringWithFormat:@"Video Format: %@", videoFormat]);
+    NSLog([NSString stringWithFormat:@"Video Format Profile: %@", videoFormatProfile]);
+    NSLog([NSString stringWithFormat:@"Video Format Version: %@", videoFormatVersion]);
+    NSLog([NSString stringWithFormat:@"Audio Format: %@", audioFormat]);
+    NSLog([NSString stringWithFormat:@"Audio Format Profile: %@", audioFormatProfile]);
+    NSLog([NSString stringWithFormat:@"Audio Format Version: %@", audioFormatVersion]);
+    NSLog([NSString stringWithFormat:@"Audio Sampling Rate: %@", audioSamplingRate]);*/
 }
 
 - (void)check_file {
+    correctVideoFormat = true;
+    correctAudioFormat = true;
+    [videoPropertiesLabel setStringValue:[NSString stringWithFormat:@"%@\n%@\n%@\n%dx%d", videoFormat, videoFormatVersion, videoFormatProfile, inputWidth, inputHeight]];
     
+    if ([inputfilename isNotEqualTo:@""] && [videoFormat isEqualToString:@"MPEG Video"] && [videoFormatVersion isEqualToString:@"Version 2"] && [videoFormatProfile isEqualToString:@"Main@Main"] && inputWidth == 720 && inputHeight == 480) {
+        
+        [videoPropertiesLabel setTextColor:[NSColor greenColor]];
+    } else {
+        [videoPropertiesLabel setTextColor:[NSColor redColor]];
+        correctVideoFormat = false;
+
+    }
+    
+    [audioPropertiesLabel setStringValue:[NSString stringWithFormat:@"%@\n%@\n%@\n%@", audioFormat, audioFormatVersion, audioFormatProfile, audioSamplingRate]];
+
+    if ([audioFormat isEqualToString:@"MPEG Audio"] && [audioFormatVersion isEqualToString:@"Version 1"] && [audioFormatProfile isEqualToString:@"Layer 2"] && [audioSamplingRate isEqualToString:@"48.0 KHz"]) {
+        
+        [audioPropertiesLabel setTextColor:[NSColor greenColor]];
+    } else {
+        [audioPropertiesLabel setTextColor:[NSColor redColor]];
+        correctAudioFormat = false;
+    }
+
+    if (correctAudioFormat && correctVideoFormat) {
+        [messageLabel setStringValue:@"This file is the correct format to upload."];
+        [messageLabel setTextColor:[NSColor greenColor]];
+        [fixButton setEnabled:false];
+    } else {
+        [messageLabel setStringValue:@"There is a problem with this file.  Click the Fix button to repair the issue."];
+        [messageLabel setTextColor:[NSColor redColor]];
+        [fixButton setEnabled:true];
+    }
+
+
+}
+
+- (void)reset_fields {
+    inputfilename = @"";
+    frames = 0;
+    inputWidth = 0;
+    inputHeight = 0;
+    videoFormat = @"";
+    videoFormatVersion = @"";
+    videoFormatProfile = @"";
+    audioFormat = @"";
+    audioFormatVersion = @"";
+    audioFormatProfile = @"";
+    audioSamplingRate = 0;
+    correctAudioFormat = true;
+    correctVideoFormat = true;
+
+    [inputFileBox setStringValue:inputfilename];
+    [fixButton setEnabled:false];
+    [videoPropertiesLabel setTextColor:[NSColor grayColor]];
+    [videoPropertiesLabel setStringValue:@"No Video Loaded"];
+    [audioPropertiesLabel setTextColor:[NSColor grayColor]];
+    [audioPropertiesLabel setStringValue:@"No Audio Loaded"];
 }
 
 - (void)parseOutput:(NSString *)output {

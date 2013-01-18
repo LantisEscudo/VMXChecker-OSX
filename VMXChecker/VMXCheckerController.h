@@ -44,6 +44,7 @@
 - (IBAction)fixClick:(id)sender;
 - (void)media_info;
 - (void)check_file;
+- (void)reset_fields;
 
 
 @end
