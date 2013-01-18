@@ -58,11 +58,14 @@ NSFont *grayFont;
 - (IBAction)fileBrowse:(id)sender {
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
     
+    NSArray *fileTypes = [[NSArray alloc] initWithObjects:@"mpg", @"MPG", @"mpeg", @"MPEG", nil];
+    
     [openDlg setCanChooseFiles:YES];
     [openDlg setCanChooseDirectories:NO];
     [openDlg setAllowsMultipleSelection:NO];
+    [openDlg setAllowedFileTypes:fileTypes];
     
-    if ( [openDlg runModal] == NSOKButton )
+    if ( [openDlg runModalForTypes:fileTypes] == NSOKButton )
     {
         NSURL* fileName = [openDlg URL];
         
