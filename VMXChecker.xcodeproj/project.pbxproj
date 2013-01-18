@@ -21,12 +21,12 @@
 		CE56E4D816A8F9D600107D99 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		CE56E4D916A8F9D600107D99 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		CE56E4DA16A8F9D600107D99 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		CE56E4DD16A8F9D600107D99 /* VMXChecker-Info.plist */ = {isa = PBXFileReference; path = "VMXChecker-Info.plist"; sourceTree = "<group>"; };
+		CE56E4DD16A8F9D600107D99 /* VMXChecker-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "VMXChecker-Info.plist"; sourceTree = "<group>"; };
 		CE56E4DF16A8F9D600107D99 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		CE56E4E116A8F9D600107D99 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		CE56E4E316A8F9D600107D99 /* VMXChecker-Prefix.pch */ = {isa = PBXFileReference; path = "VMXChecker-Prefix.pch"; sourceTree = "<group>"; };
+		CE56E4E316A8F9D600107D99 /* VMXChecker-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VMXChecker-Prefix.pch"; sourceTree = "<group>"; };
 		CE56E4E516A8F9D600107D99 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		CE56E4E716A8F9D600107D99 /* AppDelegate.h */ = {isa = PBXFileReference; path = AppDelegate.h; sourceTree = "<group>"; };
+		CE56E4E716A8F9D600107D99 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		CE56E4E816A8F9D600107D99 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		CE56E4EB16A8F9D600107D99 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
