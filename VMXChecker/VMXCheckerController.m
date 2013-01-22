@@ -15,19 +15,21 @@ int passes;
 int passes_done;
 NSString *inputfilename;
 int frames;
+int framesComplete;
 int inputWidth;
 int inputHeight;
 NSString *videoFormat;
 NSString *videoFormatVersion;
 NSString *videoFormatProfile;
+NSString *videoDAR;
+NSString *videoScanType;
+NSString *videofps;
 NSString *audioFormat;
 NSString *audioFormatVersion;
 NSString *audioFormatProfile;
 int audioSamplingRate;
-BOOL correctVideoFormat;
+bool correctVideoFormat;
 bool correctAudioFormat;
-
-NSFont *grayFont;
 
 
 @synthesize window;
@@ -39,11 +41,15 @@ NSFont *grayFont;
     ffmpegpath = [[[NSBundle bundleForClass:[self class]] pathForResource:@"ffmpeg" ofType:nil] retain];
     inputfilename = @"";
     frames = 0;
+    framesComplete = 0;
     inputWidth = 0;
     inputHeight = 0;
     videoFormat = @"";
     videoFormatVersion = @"";
     videoFormatProfile = @"";
+    videoDAR = @"";
+    videoScanType = @"";
+    videofps = @"";
     audioFormat = @"";
     audioFormatVersion = @"";
     audioFormatProfile = @"";
@@ -76,11 +82,34 @@ NSFont *grayFont;
         if ([inputfilename isNotEqualTo:@""]) {
             [self check_file];            
         }
+    
     }
+    
 }
 
 - (IBAction)fixClick:(id)sender {
     
+}
+
+- (IBAction)cancelClick:(id)sender {
+    if ([[closePanelButton title] isEqualToString:@"Cancel"]) {
+        NSAlert *confirmCancel = [NSAlert alertWithMessageText:@"Confirm Cancel Encode" 
+                                                 defaultButton:@"No"
+                                               alternateButton:@"Yes" 
+                                                   otherButton:nil 
+                                     informativeTextWithFormat:@"Are you sure you want to cancel encoding?"];
+        if ([confirmCancel runModal] == NSAlertAlternateReturn) {
+            [self encode];
+            [closePanelButton setTitle:@"Close"];
+        }
+        //Don't do anything if they click "No"
+        
+    } else {
+        [encodePanel setIsVisible:NO];
+        [closePanelButton setTitle:@"Cancel"];
+        [window setIsVisible:YES];
+    }
+
 }
 
 - (void)media_info {
@@ -140,6 +169,15 @@ NSFont *grayFont;
     tempnodes = [vt nodesForXPath:@"./Format_version" error:nil];
     videoFormatVersion = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
     
+    tempnodes = [vt nodesForXPath:@"./Display_aspect_ratio" error:nil];
+    videoDAR = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";    
+    
+    tempnodes = [vt nodesForXPath:@"./Scan_type" error:nil];
+    videoScanType = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";    
+    
+    tempnodes = [vt nodesForXPath:@"./Frame_rate" error:nil];
+    videofps = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    
     NSXMLElement *at = [atracks objectAtIndex:0];
     tempnodes = [at nodesForXPath:@"./Format" error:nil];
     audioFormat = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
@@ -151,48 +189,92 @@ NSFont *grayFont;
     audioFormatVersion = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
     
     tempnodes = [at nodesForXPath:@"./Sampling_rate" error:nil];
-    NSLog([[tempnodes objectAtIndex:0] stringValue]);
     audioSamplingRate = ([tempnodes count] > 0) ? [[[tempnodes objectAtIndex:0] stringValue] intValue] : 0;
 
-/*    NSLog([NSString stringWithFormat:@"Video Format: %@", videoFormat]);
+/*  
+    NSLog([NSString stringWithFormat:@"Video Format: %@", videoFormat]);
     NSLog([NSString stringWithFormat:@"Video Format Profile: %@", videoFormatProfile]);
     NSLog([NSString stringWithFormat:@"Video Format Version: %@", videoFormatVersion]);
     NSLog([NSString stringWithFormat:@"Audio Format: %@", audioFormat]);
     NSLog([NSString stringWithFormat:@"Audio Format Profile: %@", audioFormatProfile]);
     NSLog([NSString stringWithFormat:@"Audio Format Version: %@", audioFormatVersion]);
-    NSLog([NSString stringWithFormat:@"Audio Sampling Rate: %@", audioSamplingRate]);*/
+    NSLog([NSString stringWithFormat:@"Audio Sampling Rate: %@", audioSamplingRate]);
+    NSLog([[tempnodes objectAtIndex:0] stringValue]);
+*/
 }
 
 - (void)check_file {
     correctVideoFormat = true;
     correctAudioFormat = true;
-    [videoPropertiesLabel setStringValue:[NSString stringWithFormat:@"%@\n%@\n%@\n%dx%d", videoFormat, videoFormatVersion, videoFormatProfile, inputWidth, inputHeight]];
     
-    if ([inputfilename isNotEqualTo:@""] && [videoFormat isEqualToString:@"MPEG Video"] && [videoFormatVersion isEqualToString:@"Version 2"] && [videoFormatProfile isEqualToString:@"Main@Main"] && inputWidth == 720 && inputHeight == 480) {
+    if ([inputfilename isNotEqualTo:@""] && [videoFormat isEqualToString:@"MPEG Video"] && [videoFormatVersion isEqualToString:@"Version 2"] && [videoFormatProfile isEqualToString:@"Main@Main"] && [videoDAR isEqualToString:@"4:3"] && [videoScanType isEqualToString:@"Interlaced"] && [videofps isEqualToString:@"29.970"] && inputWidth == 720 && inputHeight == 480) {
         
+        [videoPropertiesLabel setStringValue:@"Correct Video Format"];
         [videoPropertiesLabel setTextColor:[NSColor greenColor]];
     } else {
+        NSMutableString *errorstring = [NSMutableString stringWithString:@""];
+        if (![videoFormat isEqualToString:@"MPEG Video"] || ![videoFormatVersion isEqualToString:@"Version 2"]) {
+            [errorstring appendString:@"Not MPEG-2 Video\n"];
+            
+        } else if (![videoFormatProfile isEqualToString:@"Main@Main"]) {
+            [errorstring appendString:@"Incorrect MPEG Profile\n"];
+        }
+
+        if (![videoDAR isEqualToString:@"4:3"]) {
+            [errorstring appendString:@"Incorrect Aspect Ratio\n"];
+        }
+        
+        if (![videoScanType isEqualToString:@"Interlaced"]) {
+            [errorstring appendString:@"Incorrect Scan Mode\n"];
+        }
+        
+        if (![videofps isEqualToString:@"29.970"]) {
+            [errorstring appendString:@"Incorrect Frame Rate\n"];
+        }
+        
+        if ((inputHeight != 480) || (inputWidth != 720)) {
+            [errorstring appendString:@"Incorrect Resolution"];
+        }
+        
+        [videoPropertiesLabel setStringValue:errorstring];
         [videoPropertiesLabel setTextColor:[NSColor redColor]];
         correctVideoFormat = false;
 
     }
     
-    [audioPropertiesLabel setStringValue:[NSString stringWithFormat:@"%@\n%@\n%@\n%d", audioFormat, audioFormatVersion, audioFormatProfile, audioSamplingRate]];
-
     if ([audioFormat isEqualToString:@"MPEG Audio"] && [audioFormatVersion isEqualToString:@"Version 1"] && [audioFormatProfile isEqualToString:@"Layer 2"] && audioSamplingRate == 48000) {
         
+        [audioPropertiesLabel setStringValue:@"Correct audio format"];
         [audioPropertiesLabel setTextColor:[NSColor greenColor]];
     } else {
+        NSMutableString *errorstring = [NSMutableString stringWithString:@""];
+        
+        if (![audioFormat isEqualToString:@"MPEG Audio"]) {
+            if ([audioFormat isEqualToString:@"AC-3"]) {
+                [errorstring appendString:@"Dolby Digital Audio\n"];
+            } else {
+                [errorstring appendString:@"Incorrect Audio Format\n"];
+            }
+        } else if (![audioFormatProfile isEqualToString:@"Layer 2"] || ![audioFormatVersion isEqualToString:@"Version 1"]) {
+            [errorstring appendString:@"Incorrect MPEG Audio Profile\n"];
+        }
+        
+        if (audioSamplingRate != 48000) {
+            [errorstring appendString:@"Incorrect sampling rate"];
+        }
+        
+        
+        [audioPropertiesLabel setStringValue:errorstring];
         [audioPropertiesLabel setTextColor:[NSColor redColor]];
         correctAudioFormat = false;
     }
 
     if (correctAudioFormat && correctVideoFormat) {
-        [messageLabel setStringValue:@"This file is the correct format to upload."];
+        [messageLabel setStringValue:@"There are no problems with this file."];
         [messageLabel setTextColor:[NSColor greenColor]];
         [fixButton setEnabled:false];
     } else {
-        [messageLabel setStringValue:@"There is a problem with this file.  Click the Fix button to repair the issue."];
+        [messageLabel setStringValue:@"There is a problem with this file.  Click the Fix button to correct the problem."];
         [messageLabel setTextColor:[NSColor redColor]];
         [fixButton setEnabled:true];
     }
@@ -208,6 +290,9 @@ NSFont *grayFont;
     videoFormat = @"";
     videoFormatVersion = @"";
     videoFormatProfile = @"";
+    videoDAR = @"";
+    videoScanType = @"";
+    videofps = @"";
     audioFormat = @"";
     audioFormatVersion = @"";
     audioFormatProfile = @"";
@@ -223,51 +308,74 @@ NSFont *grayFont;
     [audioPropertiesLabel setStringValue:@"No Audio Loaded"];
 }
 
-- (void)parseOutput:(NSString *)output {
-    if ([output rangeOfString:@"indexing"].location != NSNotFound) {
-        //do nothing, toss the line
+- (void)encode {
+    if (findRunning) {
+        [encodeTask stopProcess];
+        [encodeTask release];
+        encodeTask = nil;
+        return;
+    } else {
+        NSArray *args = [self buildCommandLine];
         
-    } else if ([output rangeOfString:@"[info]"].location != NSNotFound) {
-        //info to log
+        encodeTask = [[TaskWrapper alloc] initWithController:self arguments:args];
+        [encodeTask startProcess];
+    }
+}
+
+- (NSArray*)buildCommandLine {
+    NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:12];
+    
+    [args addObject:ffmpegpath];
+    [args addObject:@"-i"];
+    [args addObject:[inputFileBox stringValue]];
+    [args addObject:@"-target"];
+    [args addObject:@"ntsc-dvd"];
+    
+    if (correctVideoFormat) {
+        [args addObject:@"-vcodec"];
+        [args addObject:@"copy"];
+    }
+    
+    if (correctAudioFormat) {
+        [args addObject:@"-acodec"];
+        [args addObject:@"copy"];
+    } else {
+        [args addObject:@"-acodec"];
+        [args addObject:@"mp2"];
+        [args addObject:@"-b:a"];
+        [args addObject:@"192k"];
+    }
+    
+    [args addObject:[NSString stringWithFormat:@"%@-VMX.mpg", [inputfilename stringByDeletingPathExtension]]];
+    
+    
+    return args;
+    
+}
+
+- (void)parseOutput:(NSString *)output {
+    
+    if ([output rangeOfString:@"frame="].location != NSNotFound) {
+        //Video progress
+        NSArray *progValues = [output captureComponentsMatchedByRegex:@"frame=.*?(\\d+) fps=.*?(\\d+\\.?\\d*)"];
+        
+        [progBar setDoubleValue:[[progValues objectAtIndex:0] doubleValue]];
+        framesComplete = [[progValues objectAtIndex:0] intValue];
+        [progressLabel setStringValue:[NSString stringWithFormat:@"Complete: %.1f%%", framesComplete/frames]];
+        [fpsLabel setStringValue:[NSString stringWithFormat:@"FPS: %@", [progValues objectAtIndex:1]]];
+        [framesLabel setStringValue:[NSString stringWithFormat:@"Progress: %d/%d", framesComplete, frames]];
+    
+    } else if ([output rangeOfString:@"video:"].location != NSNotFound) {
+        //Encoding Complete!
+        [closePanelButton setStringValue:@"Done!"];
+        [progBar setDoubleValue:[progBar maxValue]];
         [[textWindow textStorage] appendAttributedString: [[[NSAttributedString alloc]
                                                             initWithString: output] autorelease]];
-        
+            
         [self performSelector:@selector(scrollToVisible:) withObject:nil afterDelay:0.0];
+        [NSApp requestUserAttention:NSInformationalRequest];
         
-    } else if ([output rangeOfString:@"\%"].location != NSNotFound) {
-        //video progress
-        if ([output rangeOfString:@"remux"].location != NSNotFound) {
-            [progBar setDoubleValue:100.0];
-            //[completeLabel setStringValue:[NSString stringWithFormat:@"%.1f%% Completed, Pass %d/%d", [progBar doubleValue], passes_done, passes]];
-            //[etaLabel setStringValue:@"Remaining: 0:00:00"];
-        } else {
-            NSArray *progValues = [output 
-                                   captureComponentsMatchedByRegex:@".(.*)%.*, (.*) fps.*eta (.*)"];
-            
-            [progBar setDoubleValue:[[progValues objectAtIndex:1] doubleValue]];
-            //[completeLabel setStringValue:[NSString stringWithFormat:@"%.1f%% Completed, Pass %d/%d", [progBar doubleValue], passes_done, passes]];
-            //[fpsLabel setStringValue:[NSString stringWithFormat:@"FPS: %@", [progValues objectAtIndex:2]]];
-            //[etaLabel setStringValue:[NSString stringWithFormat:@"Remaining: %@", [progValues objectAtIndex:3]]];
-            
-        }
-        
-    } else if ([output rangeOfString:@"encoded"].location != NSNotFound) {
-        //Complete!
-        
-        if (passes_done == passes) {
-            [closePanelButton setStringValue:@"Done!"];
-            [progBar setDoubleValue:100.0];
-            //[completeLabel setStringValue:[NSString stringWithFormat:@"%.1f%% Completed, Pass %d/%d", [progBar doubleValue], passes_done, passes]];
-            //[etaLabel setStringValue:@"Remaining: 0:00:00"];
-            [[textWindow textStorage] appendAttributedString: [[[NSAttributedString alloc]
-                                                                initWithString: output] autorelease]];
-            
-            [self performSelector:@selector(scrollToVisible:) withObject:nil afterDelay:0.0];
-            [NSApp requestUserAttention:NSInformationalRequest];
-        } else {
-            //Do nothing
-        }
-    } else if ([output rangeOfString:@"[error]"].location != NSNotFound) {
+    } else if ([output rangeOfString:@"Error while"].location != NSNotFound) {
         [[textWindow textStorage] appendAttributedString: [[[NSAttributedString alloc]
                                                             initWithString: output] autorelease]];
         
@@ -275,8 +383,13 @@ NSFont *grayFont;
         [NSApp requestUserAttention:NSInformationalRequest];
         NSAlert *encodeErrorAlert = [NSAlert alertWithMessageText:@"Encode failed" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Encode failed, error message was: %@", output];
         [encodeErrorAlert runModal];
+        
     } else {
-        //Otherwise, just toss it
+        //Output to Log
+        [[textWindow textStorage] appendAttributedString: [[[NSAttributedString alloc]
+                                                            initWithString: output] autorelease]];
+        
+        [self performSelector:@selector(scrollToVisible:) withObject:nil afterDelay:0.0];
     }
     
 }
@@ -289,24 +402,18 @@ NSFont *grayFont;
 }
 
 - (void)scrollToVisible:(id)ignore {
-    //[textWindow scrollRangeToVisible:NSMakeRange([[textWindow string] length], 0)];
+    [textWindow scrollRangeToVisible:NSMakeRange([[textWindow string] length], 0)];
 }
 
 - (void)processStarted {
     findRunning=YES;
-    //[textWindow setString:@""];
-    //[closePanelButton setTitle:@"Cancel"];
+    [textWindow setString:@""];
+    [closePanelButton setTitle:@"Cancel"];
 }
 
 - (void)processFinished {
-    if (passes_done == passes) {
-        findRunning=NO;
-        //[closePanelButton setTitle:@"Done!"];  
-        passes_done = 0;
-    } else {
-        passes_done++;
-        //[self execx264];
-    }
+    findRunning=NO;
+    [closePanelButton setTitle:@"Done!"];
 }
 
 @end
