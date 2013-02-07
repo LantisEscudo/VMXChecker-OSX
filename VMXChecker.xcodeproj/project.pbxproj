@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE2E867616C4002700B3AA64 /* ffmpeg in Resources */ = {isa = PBXBuildFile; fileRef = CE2E867516C4002700B3AA64 /* ffmpeg */; };
 		CE56E4D616A8F9D600107D99 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE56E4D516A8F9D600107D99 /* Cocoa.framework */; };
 		CE56E4E016A8F9D600107D99 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = CE56E4DE16A8F9D600107D99 /* InfoPlist.strings */; };
 		CE56E4E216A8F9D600107D99 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56E4E116A8F9D600107D99 /* main.m */; };
@@ -19,6 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CE2E867516C4002700B3AA64 /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = ffmpeg; sourceTree = "<group>"; };
 		CE56E4D116A8F9D600107D99 /* VMXChecker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VMXChecker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE56E4D516A8F9D600107D99 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		CE56E4D816A8F9D600107D99 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -54,6 +56,7 @@
 		CE56E4C616A8F9D500107D99 = {
 			isa = PBXGroup;
 			children = (
+				CE2E867516C4002700B3AA64 /* ffmpeg */,
 				CE56E4DB16A8F9D600107D99 /* VMXChecker */,
 				CE56E4D416A8F9D600107D99 /* Frameworks */,
 				CE56E4D216A8F9D600107D99 /* Products */,
@@ -169,6 +172,7 @@
 				CE56E4E616A8F9D600107D99 /* Credits.rtf in Resources */,
 				CE56E4EC16A8F9D600107D99 /* MainMenu.xib in Resources */,
 				CE6B30B816A9D765005C7346 /* mediainfo in Resources */,
+				CE2E867616C4002700B3AA64 /* ffmpeg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

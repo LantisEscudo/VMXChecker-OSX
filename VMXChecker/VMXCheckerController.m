@@ -88,7 +88,35 @@ bool correctAudioFormat;
 }
 
 - (IBAction)fixClick:(id)sender {
+        
+    //Test for input exists
+    if (![[NSFileManager defaultManager] fileExistsAtPath:[inputFileBox stringValue]]) {
+        NSAlert *notFoundSourceAlert = [NSAlert 
+                                        alertWithMessageText:@"Source File Not Found" 
+                                        defaultButton:@"OK" 
+                                        alternateButton:nil 
+                                        otherButton:nil 
+                                        informativeTextWithFormat:@"The source file could not be found."];
+        [notFoundSourceAlert runModal];
+        return;
+    }
+        
+    //Test for destination exists
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithFormat:@"%@-VMX.mpg", [inputfilename stringByDeletingPathExtension]]]) {
+        NSAlert *confirmOverwrite = [NSAlert alertWithMessageText:@"Confirm Overwrite" 
+                                                    defaultButton:@"No"
+                                                  alternateButton:@"Yes" 
+                                                      otherButton:nil 
+                                        informativeTextWithFormat:@"Destination file exists. Do you want to overwrite?"];
+        if ([confirmOverwrite runModal] == NSAlertDefaultReturn) {
+            return;
+        }
+    }
     
+    [window setIsVisible:NO];
+    [encodePanel setIsVisible:YES];
+    [self encode];
+
 }
 
 - (IBAction)cancelClick:(id)sender {
@@ -178,6 +206,9 @@ bool correctAudioFormat;
     tempnodes = [vt nodesForXPath:@"./Frame_rate" error:nil];
     videofps = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
     
+    tempnodes = [vt nodesForXPath:@"./Frame_count" error:nil];
+    frames = ([tempnodes count] > 0) ? [[[tempnodes objectAtIndex:0] stringValue] intValue] : 0;
+    
     NSXMLElement *at = [atracks objectAtIndex:0];
     tempnodes = [at nodesForXPath:@"./Format" error:nil];
     audioFormat = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
@@ -207,7 +238,7 @@ bool correctAudioFormat;
     correctVideoFormat = true;
     correctAudioFormat = true;
     
-    if ([inputfilename isNotEqualTo:@""] && [videoFormat isEqualToString:@"MPEG Video"] && [videoFormatVersion isEqualToString:@"Version 2"] && [videoFormatProfile isEqualToString:@"Main@Main"] && [videoDAR isEqualToString:@"4:3"] && [videoScanType isEqualToString:@"Interlaced"] && [videofps isEqualToString:@"29.970"] && inputWidth == 720 && inputHeight == 480) {
+    if ([inputfilename isNotEqualTo:@""] && [videoFormat isEqualToString:@"MPEG Video"] && [videoFormatVersion isEqualToString:@"Version 2"] && [videoFormatProfile isEqualToString:@"Main@Main"] && ([videoDAR isEqualToString:@"4:3"] || [videoDAR isEqualToString:@"1.333"]) && [videoScanType isEqualToString:@"Interlaced"] && [videofps isEqualToString:@"29.970"] && inputWidth == 720 && inputHeight == 480) {
         
         [videoPropertiesLabel setStringValue:@"Correct Video Format"];
         [videoPropertiesLabel setTextColor:[NSColor greenColor]];
@@ -220,7 +251,7 @@ bool correctAudioFormat;
             [errorstring appendString:@"Incorrect MPEG Profile\n"];
         }
 
-        if (![videoDAR isEqualToString:@"4:3"]) {
+        if (![videoDAR isEqualToString:@"4:3"] && ![videoDAR isEqualToString:@"1.333"]) {
             [errorstring appendString:@"Incorrect Aspect Ratio\n"];
         }
         
@@ -328,6 +359,7 @@ bool correctAudioFormat;
     [args addObject:ffmpegpath];
     [args addObject:@"-i"];
     [args addObject:[inputFileBox stringValue]];
+    [args addObject:@"-y"];
     [args addObject:@"-target"];
     [args addObject:@"ntsc-dvd"];
     
@@ -348,6 +380,7 @@ bool correctAudioFormat;
     
     [args addObject:[NSString stringWithFormat:@"%@-VMX.mpg", [inputfilename stringByDeletingPathExtension]]];
     
+    //NSLog([NSString stringWithFormat:@"%@", [args componentsJoinedByString:@" "]]);
     
     return args;
     
@@ -359,10 +392,16 @@ bool correctAudioFormat;
         //Video progress
         NSArray *progValues = [output captureComponentsMatchedByRegex:@"frame=.*?(\\d+) fps=.*?(\\d+\\.?\\d*)"];
         
-        [progBar setDoubleValue:[[progValues objectAtIndex:0] doubleValue]];
-        framesComplete = [[progValues objectAtIndex:0] intValue];
-        [progressLabel setStringValue:[NSString stringWithFormat:@"Complete: %.1f%%", framesComplete/frames]];
-        [fpsLabel setStringValue:[NSString stringWithFormat:@"FPS: %@", [progValues objectAtIndex:1]]];
+        
+        
+        framesComplete = [[progValues objectAtIndex:1] intValue];
+        double percent = ((double)framesComplete/(double)frames)*100;
+        
+        NSLog([NSString stringWithFormat:@"%d, %d, %f", framesComplete, frames, percent]);
+        
+        [progressLabel setStringValue:[NSString stringWithFormat:@"Complete: %.1f%%", percent]];
+        [progBar setDoubleValue:percent];
+        [fpsLabel setStringValue:[NSString stringWithFormat:@"FPS: %@", [progValues objectAtIndex:2]]];
         [framesLabel setStringValue:[NSString stringWithFormat:@"Progress: %d/%d", framesComplete, frames]];
     
     } else if ([output rangeOfString:@"video:"].location != NSNotFound) {
