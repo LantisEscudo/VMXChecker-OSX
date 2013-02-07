@@ -49,7 +49,7 @@
 - (void)check_file;
 - (void)reset_fields;
 - (void)encode;
-- (NSArray*)buildCommandLine;
+- (NSArray*)newCommandLine;
 
 
 @end

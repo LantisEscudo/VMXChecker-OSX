@@ -14,6 +14,7 @@ TaskWrapper* encodeTask;
 int passes;
 int passes_done;
 NSString *inputfilename;
+NSString *outputfilename;
 int frames;
 int framesComplete;
 int inputWidth;
@@ -40,6 +41,7 @@ bool correctAudioFormat;
     findRunning=NO;
     ffmpegpath = [[[NSBundle bundleForClass:[self class]] pathForResource:@"ffmpeg" ofType:nil] retain];
     inputfilename = @"";
+    outputfilename = @"";
     frames = 0;
     framesComplete = 0;
     inputWidth = 0;
@@ -85,6 +87,7 @@ bool correctAudioFormat;
     
     }
     
+    [fileTypes release];    
 }
 
 - (IBAction)fixClick:(id)sender {
@@ -133,6 +136,14 @@ bool correctAudioFormat;
         //Don't do anything if they click "No"
         
     } else {
+        
+        if ([[closePanelButton title] isEqualToString:@"Done!"]) {
+            [inputFileBox setStringValue:outputfilename];
+            inputfilename = outputfilename;
+            [self media_info];
+            [self check_file];
+        }
+        
         [encodePanel setIsVisible:NO];
         [closePanelButton setTitle:@"Cancel"];
         [window setIsVisible:YES];
@@ -166,6 +177,9 @@ bool correctAudioFormat;
         NSAlert *noVidAlert = [NSAlert alertWithMessageText:@"No video stream found" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"No video stream was found in the file."];
         [self reset_fields];
         [noVidAlert runModal];
+        [MIPipe release];
+        [MITask release];
+        [MIParsedOutput release];
         return;
     }
         
@@ -174,6 +188,9 @@ bool correctAudioFormat;
         NSAlert *noAudAlert = [NSAlert alertWithMessageText:@"No audio stream found" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"No audio stream was found in the file."];
         [self reset_fields];
         [noAudAlert runModal];
+        [MIPipe release];
+        [MITask release];
+        [MIParsedOutput release];
         return;
     }
     
@@ -201,7 +218,8 @@ bool correctAudioFormat;
     videoDAR = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";    
     
     tempnodes = [vt nodesForXPath:@"./Scan_type" error:nil];
-    videoScanType = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";    
+    videoScanType = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
+    [videoScanType retain];
     
     tempnodes = [vt nodesForXPath:@"./Frame_rate" error:nil];
     videofps = ([tempnodes count] > 0) ? [[tempnodes objectAtIndex:0] stringValue] : @"";
@@ -222,16 +240,9 @@ bool correctAudioFormat;
     tempnodes = [at nodesForXPath:@"./Sampling_rate" error:nil];
     audioSamplingRate = ([tempnodes count] > 0) ? [[[tempnodes objectAtIndex:0] stringValue] intValue] : 0;
 
-/*  
-    NSLog([NSString stringWithFormat:@"Video Format: %@", videoFormat]);
-    NSLog([NSString stringWithFormat:@"Video Format Profile: %@", videoFormatProfile]);
-    NSLog([NSString stringWithFormat:@"Video Format Version: %@", videoFormatVersion]);
-    NSLog([NSString stringWithFormat:@"Audio Format: %@", audioFormat]);
-    NSLog([NSString stringWithFormat:@"Audio Format Profile: %@", audioFormatProfile]);
-    NSLog([NSString stringWithFormat:@"Audio Format Version: %@", audioFormatVersion]);
-    NSLog([NSString stringWithFormat:@"Audio Sampling Rate: %@", audioSamplingRate]);
-    NSLog([[tempnodes objectAtIndex:0] stringValue]);
-*/
+    [MIPipe release];
+    [MITask release];
+    [MIParsedOutput release];
 }
 
 - (void)check_file {
@@ -346,14 +357,14 @@ bool correctAudioFormat;
         encodeTask = nil;
         return;
     } else {
-        NSArray *args = [self buildCommandLine];
+        NSArray *args = [self newCommandLine];
         
         encodeTask = [[TaskWrapper alloc] initWithController:self arguments:args];
         [encodeTask startProcess];
     }
 }
 
-- (NSArray*)buildCommandLine {
+- (NSArray*)newCommandLine {
     NSMutableArray *args = [[NSMutableArray alloc] initWithCapacity:12];
     
     [args addObject:ffmpegpath];
@@ -366,6 +377,13 @@ bool correctAudioFormat;
     if (correctVideoFormat) {
         [args addObject:@"-vcodec"];
         [args addObject:@"copy"];
+    } else {
+        if ([videoScanType isEqualToString:@"Progressive"]) {
+            [args addObject:@"-flags"];
+            [args addObject:@"+ildct+ilme"];
+            [args addObject:@"-top"];
+            [args addObject:@"0"];
+        }
     }
     
     if (correctAudioFormat) {
@@ -378,7 +396,8 @@ bool correctAudioFormat;
         [args addObject:@"192k"];
     }
     
-    [args addObject:[NSString stringWithFormat:@"%@-VMX.mpg", [inputfilename stringByDeletingPathExtension]]];
+    outputfilename = [NSString stringWithFormat:@"%@-VMX.mpg", [inputfilename stringByDeletingPathExtension]];
+    [args addObject:outputfilename];
     
     //NSLog([NSString stringWithFormat:@"%@", [args componentsJoinedByString:@" "]]);
     
@@ -395,14 +414,17 @@ bool correctAudioFormat;
         
         
         framesComplete = [[progValues objectAtIndex:1] intValue];
+        if (framesComplete > frames)
+            framesComplete = frames;
+        
         double percent = ((double)framesComplete/(double)frames)*100;
         
-        NSLog([NSString stringWithFormat:@"%d, %d, %f", framesComplete, frames, percent]);
+        //NSLog([NSString stringWithFormat:@"%d, %d, %f", framesComplete, frames, percent]);
         
         [progressLabel setStringValue:[NSString stringWithFormat:@"Complete: %.1f%%", percent]];
         [progBar setDoubleValue:percent];
         [fpsLabel setStringValue:[NSString stringWithFormat:@"FPS: %@", [progValues objectAtIndex:2]]];
-        [framesLabel setStringValue:[NSString stringWithFormat:@"Progress: %d/%d", framesComplete, frames]];
+        [framesLabel setStringValue:[NSString stringWithFormat:@"Progress: %d/%d frames", framesComplete, frames]];
     
     } else if ([output rangeOfString:@"video:"].location != NSNotFound) {
         //Encoding Complete!
@@ -422,6 +444,13 @@ bool correctAudioFormat;
         [NSApp requestUserAttention:NSInformationalRequest];
         NSAlert *encodeErrorAlert = [NSAlert alertWithMessageText:@"Encode failed" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Encode failed, error message was: %@", output];
         [encodeErrorAlert runModal];
+    } else if ([output rangeOfString:@"Press [q]"].location != NSNotFound) {
+        
+        //Remove "Press [q] to stop..." part, output the rest
+        NSString *substr = [output substringToIndex:[output rangeOfString:@"Press [q]"].location - 1];
+        [[textWindow textStorage] appendAttributedString: [[[NSAttributedString alloc]
+                                                            initWithString: substr] autorelease]];
+        [self performSelector:@selector(scrollToVisible:) withObject:nil afterDelay:0.0];
         
     } else {
         //Output to Log
