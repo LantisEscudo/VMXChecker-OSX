@@ -66,7 +66,7 @@ bool correctAudioFormat;
 - (IBAction)fileBrowse:(id)sender {
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
     
-    NSArray *fileTypes = [[NSArray alloc] initWithObjects:@"mpg", @"MPG", @"mpeg", @"MPEG", nil];
+    NSArray *fileTypes = [[NSArray alloc] initWithObjects:@"mpg", @"MPG", @"mpeg", @"MPEG", @"mp4", @"MP4", nil];
     
     [openDlg setCanChooseFiles:YES];
     [openDlg setCanChooseDirectories:NO];
@@ -378,11 +378,17 @@ bool correctAudioFormat;
         [args addObject:@"-vcodec"];
         [args addObject:@"copy"];
     } else {
+        //Correct interlacing
         if ([videoScanType isEqualToString:@"Progressive"]) {
             [args addObject:@"-flags"];
             [args addObject:@"+ildct+ilme"];
             [args addObject:@"-top"];
             [args addObject:@"0"];
+        }
+        //Correct 16:9 aspect ratios
+        if ([videoDAR isEqualToString:@"16:9"]) {
+            [args addObject:@"-vf"];
+            [args addObject:@"scale=720:360,pad=720:480:0:60"];
         }
     }
     
